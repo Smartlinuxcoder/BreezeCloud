@@ -1,0 +1,23 @@
+{
+  "name": "breezecloud",
+  "module": "index.js",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/pg": "^8.11.10",
+    "drizzle-kit": "^0.30.1",
+    "tsx": "^4.19.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@elysiajs/cookie": "^0.8.0",
+    "@elysiajs/jwt": "^1.1.1",
+    "@elysiajs/static": "^1.1.2",
+    "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.38.2",
+    "elysia": "^1.1.26",
+    "pg": "^8.13.1"
+  }
+}
