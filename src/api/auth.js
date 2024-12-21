@@ -1,8 +1,8 @@
 import { Elysia } from "elysia";
 import { jwt } from "@elysiajs/jwt";
 import { cookie } from "@elysiajs/cookie";
-import { db } from "../db";
-import { users } from "../db/schema";
+import { db } from "../utils/db";
+import { users } from "../utils/db/schema";
 import { eq } from "drizzle-orm";
 
 export const auth = new Elysia()
