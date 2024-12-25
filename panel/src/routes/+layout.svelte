@@ -49,17 +49,17 @@
                         >Register</a
                     >
                     <a
-                        href="/dash"
+                        href="/dashboard"
                         class="text-gray-100 hover:text-[#FB773C] transition-colors duration-200 text-lg"
-                        >dash</a
+                        >Dash</a
                     >
                 </nav>
                 {:else}
                 <nav class="flex space-x-4">
                     <a
-                        href="/dash"
+                        href="/dashboard"
                         class="text-gray-100 hover:text-[#FB773C] transition-colors duration-200 text-lg"
-                        >dash</a
+                        >Dash</a
                     >
                     <a
                         href="/logout"
