@@ -1,16 +1,16 @@
-import { integer, pgTable, varchar } from "drizzle-orm/pg-core";
+import { integer, pgTable, text, serial } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  username: varchar({ length: 255 }).notNull().unique(),
-  email: varchar({ length: 255 }).notNull().unique(),
-  password: varchar({ length: 255 }).notNull(),
-  fullName: varchar({ length: 255 }).notNull(),
+  id: serial('id').primaryKey(),
+  username: text('username').notNull().unique(),
+  email: text('email').notNull().unique(),
+  password: text('password').notNull(),
+  fullName: text('fullName').notNull(),
 });
 
 export const files = pgTable("files", {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  name: varchar({ length: 255 }).notNull(),
-  path: varchar({ length: 255 }).notNull(),
-  ownerId: integer().notNull(),
-});
+	id: serial('id').primaryKey(),
+	name: text('name').notNull(),
+	path: text('path').notNull(),
+	ownerId: integer('ownerId').notNull(),
+  });

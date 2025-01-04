@@ -22,7 +22,9 @@
 		"vite": "^5.4.11"
 	},
 	"dependencies": {
+		"bcrypt": "^5.1.1",
 		"drizzle-orm": "^0.33.0",
+		"jose": "^5.9.6",
 		"js-cookie": "^3.0.5",
 		"postgres": "^3.4.4"
 	}

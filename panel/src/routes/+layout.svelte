@@ -14,25 +14,23 @@
     <title>{pageName}</title>
 </svelte:head>
 
-<main
-    class="min-h-screen flex flex-col bg-gradient-to-b from-[#180161] to-[#4F1787]"
->
-    <header class="bg-[#4F1787] shadow-lg">
+<main class="min-h-screen flex flex-col bg-gradient-to-br from-[#1e1e2e] to-[#302d41]">
+    <header class="backdrop-blur-lg bg-[#1e1e2e]/70 border-b border-[#6e6c7e]/20 shadow-lg">
         <div class="container mx-auto px-4 py-3">
             <div class="flex flex-col sm:flex-row items-center justify-between">
                 <div class="flex items-center mb-4 sm:mb-0">
-                    {#if pageName === "Cogestione"}
+                    {#if pageName === "BreezeCloud"}
                         <img src={favicon} alt="Logo" class="w-12 h-12 mr-4" />
                     {:else}
                         <a
                             href="/"
-                            class="text-4xl text-gray-100 mr-4 hover:text-[#FB773C] transition-colors duration-200"
+                            class="text-4xl text-[#cdd6f4] mr-4 hover:text-[#89b4fa] transition-colors duration-200"
                             aria-label="Home"
                         >
                             🏠
                         </a>
                     {/if}
-                    <h1 class="text-3xl font-bold text-[#EB3678]">
+                    <h1 class="text-3xl font-bold text-[#cdd6f4]">
                         {pageName}
                     </h1>
                 </div>
@@ -40,17 +38,17 @@
                 <nav class="flex space-x-4">
                     <a
                         href="/login"
-                        class="text-gray-100 hover:text-[#FB773C] transition-colors duration-200 text-lg"
+                        class="text-[#a6adc8] hover:text-[#89b4fa] transition-colors duration-200 text-lg"
                         >Sign In</a
                     >
                     <a
                         href="/register"
-                        class="text-gray-100 hover:text-[#FB773C] transition-colors duration-200 text-lg"
+                        class="text-[#a6adc8] hover:text-[#89b4fa] transition-colors duration-200 text-lg"
                         >Register</a
                     >
                     <a
                         href="/dashboard"
-                        class="text-gray-100 hover:text-[#FB773C] transition-colors duration-200 text-lg"
+                        class="text-[#a6adc8] hover:text-[#89b4fa] transition-colors duration-200 text-lg"
                         >Dash</a
                     >
                 </nav>
@@ -58,33 +56,34 @@
                 <nav class="flex space-x-4">
                     <a
                         href="/dashboard"
-                        class="text-gray-100 hover:text-[#FB773C] transition-colors duration-200 text-lg"
+                        class="text-[#a6adc8] hover:text-[#89b4fa] transition-colors duration-200 text-lg"
                         >Dash</a
                     >
                     <a
                         href="/logout"
-                        class="text-gray-100 hover:text-[#FB773C] transition-colors duration-200 text-lg"
+                        class="text-[#a6adc8] hover:text-[#89b4fa] transition-colors duration-200 text-lg"
                         >Log Out</a
                     >
                 </nav>
-                
                 {/if}
             </div>
         </div>
     </header>
 
     <div class="flex-grow container mx-auto px-4 py-8">
-        <slot></slot>
+        <div class="backdrop-blur-lg bg-[#1e1e2e]/70 border border-[#6e6c7e]/20 rounded-xl shadow-xl p-6">
+            <slot></slot>
+        </div>
     </div>
 
-    <footer class="bg-[#4F1787] text-gray-100 py-4 mt-auto">
+    <footer class="backdrop-blur-lg bg-[#1e1e2e]/70 border-t border-[#6e6c7e]/20 text-[#cdd6f4] py-4 mt-auto">
         <div class="container mx-auto px-4 text-center text-sm">
             Copyright &copy; 2024
             <a
                 href="https://smartlinux.xyz"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-[#FB773C] hover:underline hover:text-[#EB3678] transition duration-200"
+                class="text-[#89b4fa] hover:text-[#cba6f7] hover:underline transition duration-200"
             >
                 Smartlinux.xyz
             </a>. All rights deserved.
@@ -97,7 +96,8 @@
 
     :global(body) {
         font-family: "Ubuntu", sans-serif;
-        color: white;
+        color: #cdd6f4;
         margin: 0;
+        background: #1e1e2e;
     }
 </style>
