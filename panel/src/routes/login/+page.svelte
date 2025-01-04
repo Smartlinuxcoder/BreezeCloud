@@ -1,6 +1,5 @@
 <script>
     import Alert from "$lib/components/Alert.svelte";
-    import Cookies from 'js-cookie';
     let showAlert = false;
     let alertMessage = "";
     let alertType;
@@ -9,8 +8,10 @@
         event.preventDefault();
         const username = event.target.elements.username.value;
         const password = event.target.elements.password.value;
+        
+        console.log(username, password);
         try {
-            const response = await fetch("/api/login", {
+            const response = await fetch("/api/v1/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -19,11 +20,10 @@
             });
 
             const result = await response.json();
-
-            if (result.success) {
+            console.log(result);
+            if (!result.error) {
                 alertType = "success";
                 alertMessage = "Login successful!";
-                Cookies.set('token', result.token, { expires: 7, secure: true, sameSite: 'Strict' });
                 window.location.href = "/dashboard";
             } else {
                 alertType = "error";
