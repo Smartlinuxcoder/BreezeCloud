@@ -22,6 +22,7 @@
 		"vite": "^5.4.11"
 	},
 	"dependencies": {
+		"@sveltejs/adapter-node": "^5.2.11",
 		"bcrypt": "^5.1.1",
 		"drizzle-orm": "^0.33.0",
 		"jose": "^5.9.6",
