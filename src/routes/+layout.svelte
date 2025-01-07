@@ -87,6 +87,7 @@
             >
                 Smartlinux.xyz
             </a>. All rights deserved.
+            <p>Commit: {import.meta.env.VITE_COMMIT_HASH}</p>
         </div>
     </footer>
 </main>

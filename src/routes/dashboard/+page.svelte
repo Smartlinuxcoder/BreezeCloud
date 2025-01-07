@@ -1,4 +1,3 @@
-<!-- +page.svelte -->
 <script>
     import { slide } from 'svelte/transition';
     import { formatBytes, getFileIcon, canPreview } from '$lib/utils';
