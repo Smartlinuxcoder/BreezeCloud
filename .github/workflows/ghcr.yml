@@ -40,5 +40,5 @@ jobs:
 
       - name: 'Deploy to Coolify'
         run: |
-          curl -X POST "https://coolify.smart.is-a.dev/api/v1/deploy?uuid=rogo0448wkgowws48c8gko8o&force=false" \
+          curl -X POST "https://coolify.smart.is-a.dev/api/v1/deploy?uuid=hs80cwg4kso80s8ocggsk48c&force=false" \
           -H "Authorization: Bearer${{ secrets.COOLIFY_TOKEN }}"
