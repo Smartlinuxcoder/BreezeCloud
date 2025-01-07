@@ -22,7 +22,7 @@
                 },
                 body: JSON.stringify({
                     username,
-                    nome,
+                    fullName: nome,
                     email: emailInput,
                     password,
                 }),
@@ -30,7 +30,7 @@
 
             const result = await response.json();
 
-            if (result.success) {
+            if (!result.error) {
                 alertType = "success";
                 alertMessage = "Registration successful!";
             } else {
