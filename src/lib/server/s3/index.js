@@ -1,10 +1,10 @@
 import * as Minio from 'minio'
-import { env } from '$env/dynamic/private';
+import 'dotenv/config'
 
 export const minioClient = new Minio.Client({
-    endPoint: env.MINIO_HOSTNAME,
-    port: env.MINIO_PORT,
-    useSSL: env.MINIO_SSL === 'true',
-    accessKey: env.MINIO_ACCESSKEY,
-    secretKey: env.MINIO_SECRETKEY
+    endPoint: process.env.MINIO_HOSTNAME,
+    port: parseInt(process.env.MINIO_PORT),
+    useSSL: process.env.MINIO_SSL === 'true',
+    accessKey: process.env.MINIO_ACCESSKEY,
+    secretKey: process.env.MINIO_SECRETKEY
 });
