@@ -21,7 +21,6 @@ export async function load({ locals }) {
         lastModified: obj.lastModified
       });
     }
-
     return {
       pageName: 'Your files',
       files: locals.user.fileTree,

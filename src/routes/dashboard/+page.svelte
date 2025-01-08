@@ -23,6 +23,7 @@
         X,
         Download,
         RefreshCw,
+        HardDrive,
     } from "lucide-svelte";
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
@@ -199,8 +200,8 @@
                         throw new Error(data.error || "Failed to delete file");
                     }
 
-                    // Remove file from local state
-                    files = files.filter((f) => f.name !== filename);
+                    delete currentFolder[filename];
+                    currentFolder = currentFolder; 
                     showAlert("success", "File deleted successfully");
                 } catch (error) {
                     showAlert("error", error.message);
@@ -257,7 +258,6 @@
         return File;
     }
 
-    // Initialize path from URL in onMount
     onMount(() => {
         if (browser) {
             const pathParam = new URL(window.location).searchParams.get('path');
@@ -298,8 +298,21 @@
         <div
             class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
         >
-            <h1 class="text-2xl font-semibold text-[#CDD6F4]">Files</h1>
-
+            <div class="flex flex-col gap-2">
+                <h1 class="text-2xl font-semibold text-[#CDD6F4]">Files</h1>
+                <div class="flex items-center gap-2 text-[#6C7086]">
+                    <HardDrive size={16} />
+                    <div class="w-48 h-2 bg-[#313244] rounded-full overflow-hidden">
+                        <div
+                            class="h-full bg-[#89B4FA] transition-all"
+                            style="width: {(data.user.storageUsed / data.user.storageQuota) * 100}%"
+                        />
+                    </div>
+                    <span class="text-sm">
+                        {formatBytes(data.user.storageUsed)} / {formatBytes(data.user.storageQuota)}
+                    </span>
+                </div>
+            </div>
             <div class="flex items-center gap-4 w-full sm:w-auto">
                 <button
                     class="p-2 rounded-lg hover:bg-[#313244] text-[#CDD6F4]"
@@ -365,7 +378,6 @@
             {/each}
         </div>
 
-        <!-- Add New Folder button -->
         <div class="flex items-center gap-4">
             <button
                 on:click={createFolder}
@@ -374,7 +386,6 @@
                 <FolderPlus size={24} />
                 New Folder
             </button>
-            <!-- ...existing upload button... -->
         </div>
 
         <!-- Files Section -->
@@ -425,11 +436,39 @@
                                     <p class="text-[#CDD6F4] truncate">
                                         {name}
                                     </p>
-                                    <p class="text-sm text-[#6C7086]">
-                                        {item.type === "folder"
-                                            ? `${Object.keys(item.children).length} items`
-                                            : `${formatBytes(item.size)} • ${new Date(item.modified).toLocaleDateString()}`}
-                                    </p>
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-sm text-[#6C7086]">
+                                            {item.type === "folder"
+                                                ? `${Object.keys(item.children).length} items`
+                                                : `${formatBytes(item.size)} • ${new Date(item.modified).toLocaleDateString()}`}
+                                        </p>
+                                        {#if item.type !== "folder"}
+                                            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    class="p-1.5 rounded-lg hover:bg-[#45475A] text-[#CDD6F4]"
+                                                    on:click={(e) => downloadFile(name, e)}
+                                                    disabled={downloadingFiles.has(name)}
+                                                >
+                                                    {#if downloadingFiles.has(name)}
+                                                        <RefreshCw size={18} class="animate-spin" />
+                                                    {:else}
+                                                        <Download size={18} />
+                                                    {/if}
+                                                </button>
+                                                <button
+                                                    class="p-1.5 rounded-lg hover:bg-[#45475A] text-[#F38BA8]"
+                                                    on:click={(e) => deleteFile(name, e)}
+                                                    disabled={deletingFiles.has(name)}
+                                                >
+                                                    {#if deletingFiles.has(name)}
+                                                        <RefreshCw size={18} class="animate-spin" />
+                                                    {:else}
+                                                        <X size={18} />
+                                                    {/if}
+                                                </button>
+                                            </div>
+                                        {/if}
+                                    </div>
                                 </div>
                             </div>
                         </div>
