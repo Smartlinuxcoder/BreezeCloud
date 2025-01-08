@@ -23,13 +23,13 @@ export async function load({ locals }) {
     }
 
     return {
-      pageName: 'Your files', 
-      files,
+      pageName: 'Your files',
+      files: locals.user.fileTree,
       user: locals.user
     };
   } catch (error) {
     return {
-      pageName: 'Error while loading files', 
+      pageName: 'Error while loading files',
       files: [],
       error: 'Failed to load files'
     };

@@ -24,7 +24,7 @@ export async function GET({ request, locals }) {
             });
         }
 
-        return json({ files });
+        return json({ files: locals.user.fileTree });
     } catch (error) {
         console.error('List error:', error);
         return json({ error: 'Failed to list files' }, { status: 500 });

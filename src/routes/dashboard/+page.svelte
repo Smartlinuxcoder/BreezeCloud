@@ -1,26 +1,48 @@
 <script>
-    import { slide } from 'svelte/transition';
-    import { formatBytes, getFileIcon, canPreview } from '$lib/utils';
-    import { confirmModal } from '$lib/stores/modal';
-    import ConfirmModal from '$lib/components/Confirmation.svelte';
-    import { onMount } from 'svelte';
-    import hljs from 'highlight.js';
-    import 'highlight.js/styles/github-dark.css';
-    import { marked } from 'marked';
-    
+    import { slide } from "svelte/transition";
+    import { formatBytes, getFileIcon, canPreview } from "$lib/utils";
+    import { confirmModal } from "$lib/stores/modal";
+    import ConfirmModal from "$lib/components/Confirmation.svelte";
+    import { onMount } from "svelte";
+    import hljs from "highlight.js";
+    import "highlight.js/styles/github-dark.css";
+    import { marked } from "marked";
+    import {
+        Upload,
+        FolderPlus,
+        Check,
+        AlertCircle,
+        Grid,
+        List,
+        ArrowUp,
+        Folder,
+        File,
+        FileText,
+        Image as ImageIcon,
+        Code,
+        X,
+        Download,
+        RefreshCw,
+    } from "lucide-svelte";
+    import { goto } from "$app/navigation";
+    import { page } from "$app/stores";
+    import { browser } from '$app/environment';
+
     export let data;
-    
+
     let files = data.files;
     let uploading = false;
-    let alert = { show: false, type: '', message: '' };
+    let alert = { show: false, type: "", message: "" };
     let fileInput;
-    let viewMode = 'grid';
+    let viewMode = "grid";
     let previewModal = false;
     let selectedFile = null;
     let downloadingFiles = new Set();
     let loadingPreview = false;
     let deletingFiles = new Set();
-    let previewContent = '';
+    let previewContent = "";
+    let currentPath = [];
+    let currentFolder = data.files;
 
     function showAlert(type, message, duration = 3000) {
         alert = { show: true, type, message };
@@ -29,54 +51,90 @@
         }, duration);
     }
 
+    // Initialize currentPath from URL
+    $: {
+        const pathParam = $page.url.searchParams.get("path");
+        if (pathParam) {
+            currentPath = pathParam.split("/").filter(Boolean);
+            currentFolder = getCurrentFolder();
+        }
+    }
+
+    // Update URL when path changes
+    $: if (browser) {
+        const url = new URL(window.location);
+        if (currentPath.length > 0) {
+            url.searchParams.set("path", currentPath.join("/"));
+        } else {
+            url.searchParams.delete("path");
+        }
+        goto(url, { replaceState: true });
+    }
+
     async function loadPreview(file) {
         loadingPreview = true;
         try {
-            const response = await fetch(`/api/v1/download?file=${encodeURIComponent(file.name)}`);
-            if (!response.ok) throw new Error('Failed to load preview');
+            const filePath = [...currentPath, file.name].join("/");
+            const response = await fetch(
+                `/api/v1/download?file=${encodeURIComponent(filePath)}`,
+            );
+            if (!response.ok) throw new Error("Failed to load preview");
 
             // Handle different file types
-            if (file.name.match(/\.(txt|md|js|py|java|cpp|h|c|css|html|json|yaml|yml|xml|svg|sh|ini|config|log)$/i)) {
+            if (
+                file.name.match(
+                    /\.(txt|md|js|py|java|cpp|h|c|css|html|json|yaml|yml|xml|svg|sh|ini|config|log)$/i,
+                )
+            ) {
                 const text = await response.text();
-                
+
                 // Handle markdown files
-                if (file.name.endsWith('.md')) {
+                if (file.name.endsWith(".md")) {
                     previewContent = marked(text);
                 } else {
                     // Apply syntax highlighting for code files
-                    const extension = file.name.split('.').pop().toLowerCase();
+                    const extension = file.name.split(".").pop().toLowerCase();
                     previewContent = hljs.highlightAuto(text).value;
                 }
             }
         } catch (error) {
-            showAlert('error', 'Failed to load preview');
+            showAlert("error", "Failed to load preview");
         } finally {
             loadingPreview = false;
         }
     }
 
-    async function openPreview(file) {
-        selectedFile = file;
+    async function openPreview(file, name) {
+        if (!file || !name) return;
+        
+        selectedFile = {
+            ...file,
+            name
+        };
         previewModal = true;
         loadingPreview = true;
 
-        if (canPreview(file.name)) {
-            await loadPreview(file);
+        if (canPreview(name)) {
+            await loadPreview({ ...file, name });
         }
     }
 
     async function downloadFile(filename, event) {
+        if (!browser || !filename) return;
         event?.stopPropagation();
         if (downloadingFiles.has(filename)) return;
-        
+
         downloadingFiles.add(filename);
         try {
-            const response = await fetch(`/api/v1/download?file=${encodeURIComponent(filename)}`);
-            if (!response.ok) throw new Error('Download failed');
-            
+            const filePath = [...currentPath, filename].join("/");
+            const response = await fetch(
+                `/api/v1/download?file=${encodeURIComponent(filePath)}`,
+            );
+            if (!response.ok) throw new Error("Download failed");
+
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
+            const a = document.createElement("a");
             a.href = url;
             a.download = filename;
             document.body.appendChild(a);
@@ -84,7 +142,7 @@
             window.URL.revokeObjectURL(url);
             a.remove();
         } catch (error) {
-            showAlert('error', error.message);
+            showAlert("error", error.message);
         } finally {
             downloadingFiles.delete(filename);
         }
@@ -98,6 +156,7 @@
         try {
             const formData = new FormData();
             formData.append("file", fileInput.files[0]);
+            formData.append("folder", currentPath.join("/"));
 
             const response = await fetch("/api/v1/upload", {
                 method: "POST",
@@ -107,11 +166,11 @@
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || "Upload failed");
 
-            showAlert('success', "File uploaded successfully!");
+            showAlert("success", "File uploaded successfully!");
             // Refresh the page to show new file
             window.location.reload();
         } catch (error) {
-            showAlert('error', error.message);
+            showAlert("error", error.message);
         } finally {
             uploading = false;
             fileInput.value = "";
@@ -121,50 +180,113 @@
     async function deleteFile(filename, event) {
         event?.stopPropagation();
         if (deletingFiles.has(filename)) return;
-        
+
         $confirmModal = {
             show: true,
-            title: 'Delete File',
+            title: "Delete File",
             message: `Are you sure you want to delete ${filename}?`,
             onConfirm: async () => {
                 deletingFiles.add(filename);
                 try {
-                    const response = await fetch('/api/v1/delete', {
-                        method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ filename })
+                    const response = await fetch("/api/v1/delete", {
+                        method: "DELETE",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ filename }),
                     });
-                    
+
                     if (!response.ok) {
                         const data = await response.json();
-                        throw new Error(data.error || 'Failed to delete file');
+                        throw new Error(data.error || "Failed to delete file");
                     }
-                    
+
                     // Remove file from local state
-                    files = files.filter(f => f.name !== filename);
-                    showAlert('success', 'File deleted successfully');
+                    files = files.filter((f) => f.name !== filename);
+                    showAlert("success", "File deleted successfully");
                 } catch (error) {
-                    showAlert('error', error.message);
+                    showAlert("error", error.message);
                 } finally {
                     deletingFiles.delete(filename);
                 }
-            }
+            },
         };
     }
+
+    function navigateToFolder(folderName) {
+        currentPath = [...currentPath, folderName];
+        currentFolder = getCurrentFolder().children;
+    }
+
+    function navigateUp() {
+        currentPath.pop();
+        currentFolder = getCurrentFolder();
+        currentPath = currentPath; // trigger reactivity
+    }
+
+    function getCurrentFolder() {
+        let folder = data.files;
+        for (const pathPart of currentPath) {
+            folder = folder[pathPart].children;
+        }
+        return folder;
+    }
+
+    async function createFolder() {
+        const folderName = prompt("Enter folder name:");
+        if (!folderName) return;
+
+        const path = [...currentPath, folderName].join("/");
+
+        try {
+            const response = await fetch("/api/v1/upload/folder", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ folderPath: path }),
+            });
+
+            if (!response.ok) throw new Error("Failed to create folder");
+            window.location.reload();
+        } catch (error) {
+            showAlert("error", error.message);
+        }
+    }
+
+    function getFileIconComponent(filename) {
+        if (filename.match(/\.(jpg|jpeg|png|gif|webp)$/i)) return ImageIcon;
+        if (filename.match(/\.(txt|md)$/i)) return FileText;
+        if (filename.match(/\.(js|py|java|cpp|h|c|css|html)$/i)) return Code;
+        return File;
+    }
+
+    // Initialize path from URL in onMount
+    onMount(() => {
+        if (browser) {
+            const pathParam = new URL(window.location).searchParams.get('path');
+            if (pathParam) {
+                currentPath = pathParam.split('/').filter(Boolean);
+                currentFolder = getCurrentFolder();
+            }
+        }
+    });
 </script>
 
+<!-- Alert component -->
 {#if alert.show}
     <div
         transition:slide
         class="fixed top-4 right-4 z-50 max-w-sm"
         role="alert"
     >
-        <div class="{alert.type === 'error' ? 'bg-[#302234] text-[#F38BA8] border-[#F38BA8]' : 'bg-[#2d323b] text-[#A6E3A1] border-[#A6E3A1]'} 
+        <div
+            class="{alert.type === 'error'
+                ? 'bg-[#302234] text-[#F38BA8] border-[#F38BA8]'
+                : 'bg-[#2d323b] text-[#A6E3A1] border-[#A6E3A1]'} 
                     p-4 rounded-lg border shadow-lg flex items-center gap-3"
         >
-            <span class="material-icons">
-                {alert.type === 'error' ? 'error' : 'check_circle'}
-            </span>
+            {#if alert.type === "error"}
+                <AlertCircle size={24} />
+            {:else}
+                <Check size={24} />
+            {/if}
             <p>{alert.message}</p>
         </div>
     </div>
@@ -173,17 +295,22 @@
 <div class="min-h-screen bg-[#1E1E2E] p-4">
     <div class="max-w-7xl mx-auto">
         <!-- Header Section -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div
+            class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
+        >
             <h1 class="text-2xl font-semibold text-[#CDD6F4]">Files</h1>
-            
+
             <div class="flex items-center gap-4 w-full sm:w-auto">
                 <button
                     class="p-2 rounded-lg hover:bg-[#313244] text-[#CDD6F4]"
-                    on:click={() => viewMode = viewMode === 'grid' ? 'list' : 'grid'}
+                    on:click={() =>
+                        (viewMode = viewMode === "grid" ? "list" : "grid")}
                 >
-                    <span class="material-icons">
-                        {viewMode === 'grid' ? 'view_list' : 'grid_view'}
-                    </span>
+                    {#if viewMode === "grid"}
+                        <List size={24} />
+                    {:else}
+                        <Grid size={24} />
+                    {/if}
                 </button>
 
                 <div class="relative flex-1 sm:flex-none">
@@ -197,65 +324,113 @@
                     />
                     <label
                         for="file-upload"
-                        class="flex items-center gap-2 px-4 py-2 bg-[#89B4FA] hover:bg-[#74C7EC] text-[#1E1E2E] rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto justify-center"
+                        class="flex items-center gap-2 px-4 py-2 bg-[#89B4FA] hover:bg-[#74C7EC]
+                               text-[#1E1E2E] rounded-lg cursor-pointer disabled:opacity-50
+                               disabled:cursor-not-allowed w-full sm:w-auto justify-center"
                         class:opacity-50={uploading}
                     >
-                        <span class="material-icons {uploading ? 'animate-spin' : ''}">{uploading ? 'sync' : 'upload'}</span>
-                        {uploading ? 'Uploading...' : 'Upload'}
+                        {#if uploading}
+                            <RefreshCw size={24} class="animate-spin" />
+                        {:else}
+                            <Upload size={24} />
+                        {/if}
+                        {uploading ? "Uploading..." : "Upload"}
                     </label>
                 </div>
             </div>
         </div>
 
+        <!-- Breadcrumb Navigation -->
+        <div class="flex items-center gap-2 text-[#CDD6F4] mb-4">
+            <button
+                class="hover:text-[#89B4FA]"
+                on:click={() => {
+                    currentPath = [];
+                    currentFolder = data.files;
+                }}
+            >
+                Home
+            </button>
+            {#each currentPath as folder, i}
+                <span>/</span>
+                <button
+                    class="hover:text-[#89B4FA]"
+                    on:click={() => {
+                        currentPath = currentPath.slice(0, i + 1);
+                        currentFolder = getCurrentFolder();
+                    }}
+                >
+                    {folder}
+                </button>
+            {/each}
+        </div>
+
+        <!-- Add New Folder button -->
+        <div class="flex items-center gap-4">
+            <button
+                on:click={createFolder}
+                class="flex items-center gap-2 px-4 py-2 bg-[#89B4FA] hover:bg-[#74C7EC] text-[#1E1E2E] rounded-lg"
+            >
+                <FolderPlus size={24} />
+                New Folder
+            </button>
+            <!-- ...existing upload button... -->
+        </div>
+
         <!-- Files Section -->
         <div class="bg-[#181825] rounded-xl shadow-sm border border-[#313244]">
-            {#if files.length === 0}
+            {#if Object.keys(currentFolder).length === 0}
                 <div class="text-center py-32" transition:slide>
-                    <span class="material-icons text-6xl text-[#6C7086] mb-4">cloud_upload</span>
+                    <Upload size={48} class="text-[#6C7086] mb-4 mx-auto" />
                     <p class="text-[#CDD6F4]">No files uploaded yet</p>
-                    <p class="text-sm text-[#6C7086]">Upload your first file to get started</p>
+                    <p class="text-sm text-[#6C7086]">
+                        Upload your first file to get started
+                    </p>
                 </div>
             {:else}
-                <div class="p-4 {viewMode === 'grid' ? 'grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3' : 'space-y-2'}">
-                    {#each files as file}
+                <div
+                    class="p-4 {viewMode === 'grid'
+                        ? 'grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3'
+                        : 'space-y-2'}"
+                >
+                    {#if currentPath.length > 0}
                         <div
-                            class="group {viewMode === 'grid' 
-                                ? 'p-3 rounded-lg hover:bg-[#313244]' 
-                                : 'flex items-center p-3 rounded-lg hover:bg-[#313244]'}"
-                            on:click={() => openPreview(file)}
+                            class="group p-3 rounded-lg hover:bg-[#313244] cursor-pointer"
+                            on:click={navigateUp}
                         >
-                            <div class={viewMode === 'grid' ? 'text-center' : 'flex items-center gap-4 flex-1'}>
-                                <div class="text-[#89B4FA]">
-                                    {@html getFileIcon(file.name)}
-                                </div>
-                                <div class={viewMode === 'grid' ? 'mt-3' : 'flex-1'}>
-                                    <p class="font-medium text-[#CDD6F4] truncate">
-                                        {file.name}
+                            <div class="flex items-center gap-4">
+                                <ArrowUp size={24} class="text-[#89B4FA]" />
+                                <span class="text-[#CDD6F4]">..</span>
+                            </div>
+                        </div>
+                    {/if}
+
+                    {#each Object.entries(currentFolder) as [name, item]}
+                        <div
+                            class="group p-3 rounded-lg hover:bg-[#313244] cursor-pointer"
+                            on:click={() =>
+                                item.type === "folder"
+                                    ? navigateToFolder(name)
+                                    : openPreview(item, name)}
+                        >
+                            <div class="flex items-center gap-4">
+                                <svelte:component
+                                    this={item.type === "folder"
+                                        ? Folder
+                                        : getFileIconComponent(name)}
+                                    size={24}
+                                    class="text-[#89B4FA]"
+                                />
+                                <div class="flex-1">
+                                    <p class="text-[#CDD6F4] truncate">
+                                        {name}
                                     </p>
                                     <p class="text-sm text-[#6C7086]">
-                                        {formatBytes(file.size)} • {new Date(file.lastModified).toLocaleDateString()}
+                                        {item.type === "folder"
+                                            ? `${Object.keys(item.children).length} items`
+                                            : `${formatBytes(item.size)} • ${new Date(item.modified).toLocaleDateString()}`}
                                     </p>
                                 </div>
-                            </div>
-                            <div class="flex gap-2">
-                                <button
-                                    class="p-2 rounded-full hover:bg-[#45475A] text-[#CDD6F4] disabled:opacity-50"
-                                    on:click={(e) => downloadFile(file.name, e)}
-                                    disabled={downloadingFiles.has(file.name)}
-                                >
-                                    <span class="material-icons {downloadingFiles.has(file.name) ? 'animate-spin' : ''}">
-                                        {downloadingFiles.has(file.name) ? 'sync' : 'download'}
-                                    </span>
-                                </button>
-                                <button
-                                    class="p-2 rounded-full hover:bg-[#45475A] text-[#F38BA8] disabled:opacity-50"
-                                    on:click={(e) => deleteFile(file.name, e)}
-                                    disabled={deletingFiles.has(file.name)}
-                                >
-                                    <span class="material-icons {deletingFiles.has(file.name) ? 'animate-spin' : ''}">
-                                        {deletingFiles.has(file.name) ? 'sync' : 'delete'}
-                                    </span>
-                                </button>
                             </div>
                         </div>
                     {/each}
@@ -269,61 +444,73 @@
 {#if previewModal && selectedFile}
     <div
         class="fixed inset-0 bg-[#181825]/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4"
-        on:click={() => previewModal = false}
+        on:click={() => (previewModal = false)}
     >
-        <div 
-            class="max-w-4xl w-full"
-            on:click|stopPropagation
-        >
+        <div class="max-w-4xl w-full" on:click|stopPropagation>
             <div class="bg-[#1E1E2E] rounded-xl overflow-hidden">
-                <div class="p-4 border-b border-[#313244] flex justify-between items-center">
-                    <h3 class="font-semibold text-[#CDD6F4]">{selectedFile.name}</h3>
+                <div
+                    class="p-4 border-b border-[#313244] flex justify-between items-center"
+                >
+                    <h3 class="font-semibold text-[#CDD6F4]">
+                        {selectedFile.name}
+                    </h3>
                     <button
                         class="p-2 rounded-full hover:bg-[#313244] text-[#CDD6F4]"
-                        on:click={() => previewModal = false}
+                        on:click={() => (previewModal = false)}
                     >
-                        <span class="material-icons">close</span>
+                        <X size={24} />
                     </button>
                 </div>
                 <div class="p-4">
                     {#if loadingPreview}
                         <div class="flex items-center justify-center h-[70vh]">
-                            <span class="material-icons text-[#89B4FA] animate-spin text-4xl">sync</span>
+                            <RefreshCw
+                                size={48}
+                                class="text-[#89B4FA] animate-spin"
+                            />
                         </div>
                     {/if}
-                    
+
                     {#if selectedFile.name.match(/\.(jpg|jpeg|png|gif|webp)$/i)}
                         <img
-                            src={`/api/v1/download?file=${encodeURIComponent(selectedFile.name)}`}
+                            src={`/api/v1/download?file=${encodeURIComponent([...currentPath, selectedFile.name].join("/"))}`}
                             alt={selectedFile.name}
                             class="max-h-[70vh] mx-auto object-contain"
                             class:hidden={loadingPreview}
-                            on:load={() => loadingPreview = false}
+                            on:load={() => (loadingPreview = false)}
                         />
                     {:else if selectedFile.name.match(/\.pdf$/i)}
                         <iframe
-                            src={`/api/v1/download?file=${encodeURIComponent(selectedFile.name)}#view=FitH`}
+                            src={`/api/v1/download?file=${encodeURIComponent([...currentPath, selectedFile.name].join("/"))}#view=FitH`}
                             class="w-full h-[70vh]"
                             class:hidden={loadingPreview}
-                            on:load={() => loadingPreview = false}
+                            on:load={() => (loadingPreview = false)}
                             title={selectedFile.name}
                         ></iframe>
                     {:else if selectedFile.name.match(/\.(txt|md|js|py|java|cpp|h|c|css|html|json|yaml|yml|xml|svg|sh|ini|config|log)$/i)}
-                        <div class="bg-[#11111b] rounded-lg p-4 max-h-[70vh] overflow-auto">
-                            {#if selectedFile.name.endsWith('.md')}
+                        <div
+                            class="bg-[#11111b] rounded-lg p-4 max-h-[70vh] overflow-auto"
+                        >
+                            {#if selectedFile.name.endsWith(".md")}
                                 {@html previewContent}
                             {:else}
-                                <pre><code class="hljs">{@html previewContent}</code></pre>
+                                <pre><code class="hljs"
+                                        >{@html previewContent}</code
+                                    ></pre>
                             {/if}
                         </div>
                     {:else}
-                        <div class="flex flex-col items-center justify-center h-[70vh] text-[#6C7086]">
-                            <span class="material-icons text-4xl mb-4">file_present</span>
+                        <div
+                            class="flex flex-col items-center justify-center h-[70vh] text-[#6C7086]"
+                        >
+                            <File size={48} class="mb-4" />
                             <p>Preview not available</p>
                             <button
                                 class="mt-4 px-4 py-2 bg-[#89B4FA] hover:bg-[#74C7EC] text-[#1E1E2E] rounded-lg"
-                                on:click={(e) => downloadFile(selectedFile.name, e)}
+                                on:click={(e) =>
+                                    downloadFile(selectedFile.name, e)}
                             >
+                                <Download size={24} class="mr-2" />
                                 Download File
                             </button>
                         </div>
@@ -337,7 +524,7 @@
 <ConfirmModal />
 
 <style>
-    @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+    @import url("https://fonts.googleapis.com/icon?family=Material+Icons");
 
     @media (min-width: 480px) {
         .xs\:grid-cols-2 {
@@ -346,8 +533,12 @@
     }
 
     @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     .animate-spin {

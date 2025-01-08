@@ -1,4 +1,4 @@
-import { integer, pgTable, text, serial } from "drizzle-orm/pg-core";
+import { integer, pgTable, text, serial, jsonb } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   id: serial('id').primaryKey(),
@@ -6,11 +6,7 @@ export const users = pgTable("users", {
   email: text('email').notNull().unique(),
   password: text('password').notNull(),
   fullName: text('fullName').notNull(),
+  storageQuota: integer('storage_quota').notNull().default(536870912), // 512MB in bytes
+  storageUsed: integer('storage_used').notNull().default(0),
+  fileTree: jsonb('file_tree').notNull().default('{}'),
 });
-
-export const files = pgTable("files", {
-	id: serial('id').primaryKey(),
-	name: text('name').notNull(),
-	path: text('path').notNull(),
-	ownerId: integer('ownerId').notNull(),
-  });

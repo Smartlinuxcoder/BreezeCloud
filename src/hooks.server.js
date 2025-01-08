@@ -1,6 +1,8 @@
-// src/hooks.server.js
 import { jwtVerify } from 'jose';
 import { env } from '$env/dynamic/private';
+import { db } from '$lib/server/db';
+import { users } from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
 
 export async function handle({ event, resolve }) {
     const token = event.cookies.get('auth');
@@ -10,7 +12,21 @@ export async function handle({ event, resolve }) {
     if (token) {
         try {
             const { payload } = await jwtVerify(token, secret);
-            event.locals.user = { username: payload.username };
+            const [userData] = await db.select().from(users).where(eq(users.username, payload.username));
+
+            if (userData) {
+                event.locals.user = {
+                    id: userData.id,
+                    username: userData.username,
+                    storageQuota: userData.storageQuota,
+                    storageUsed: userData.storageUsed,
+                    fileTree: userData.fileTree
+                };
+            } else {
+                event.locals.user = null;
+                event.cookies.delete('auth', { path: '/' });
+            }
+            
         } catch (err) {
             event.locals.user = null;
             console.error('Error:', err);
