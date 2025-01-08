@@ -81,15 +81,16 @@ export function canPreview(filename) {
     const ext = filename.split('.').pop().toLowerCase();
     const previewableTypes = [
         // Images
-        'jpg', 'jpeg', 'png', 'gif', 'webp',
+        'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg',
         // Documents
         'pdf',
         // Video
         'mp4', 'webm',
         // Audio
         'mp3', 'wav',
-        // Text
-        'txt', 'md', 'json', 'js', 'css', 'html'
+        // Text/Code
+        'txt', 'md', 'json', 'js', 'py', 'java', 'cpp', 'h', 'c', 'css', 'html',
+        'yaml', 'yml', 'xml', 'sh', 'ini', 'config', 'log'
     ];
     return previewableTypes.includes(ext);
 }
@@ -99,7 +100,6 @@ export function validateFile(file, maxSize = 100 * 1024 * 1024) { // 100MB defau
         throw new Error(`File size exceeds ${formatBytes(maxSize)}`);
     }
     
-    // Add additional validations as needed
     return true;
 }
 

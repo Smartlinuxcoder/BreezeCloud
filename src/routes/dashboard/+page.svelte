@@ -1,6 +1,12 @@
 <script>
     import { slide } from 'svelte/transition';
     import { formatBytes, getFileIcon, canPreview } from '$lib/utils';
+    import { confirmModal } from '$lib/stores/modal';
+    import ConfirmModal from '$lib/components/Confirmation.svelte';
+    import { onMount } from 'svelte';
+    import hljs from 'highlight.js';
+    import 'highlight.js/styles/github-dark.css';
+    import { marked } from 'marked';
     
     export let data;
     
@@ -13,6 +19,8 @@
     let selectedFile = null;
     let downloadingFiles = new Set();
     let loadingPreview = false;
+    let deletingFiles = new Set();
+    let previewContent = '';
 
     function showAlert(type, message, duration = 3000) {
         alert = { show: true, type, message };
@@ -21,11 +29,39 @@
         }, duration);
     }
 
+    async function loadPreview(file) {
+        loadingPreview = true;
+        try {
+            const response = await fetch(`/api/v1/download?file=${encodeURIComponent(file.name)}`);
+            if (!response.ok) throw new Error('Failed to load preview');
+
+            // Handle different file types
+            if (file.name.match(/\.(txt|md|js|py|java|cpp|h|c|css|html|json|yaml|yml|xml|svg|sh|ini|config|log)$/i)) {
+                const text = await response.text();
+                
+                // Handle markdown files
+                if (file.name.endsWith('.md')) {
+                    previewContent = marked(text);
+                } else {
+                    // Apply syntax highlighting for code files
+                    const extension = file.name.split('.').pop().toLowerCase();
+                    previewContent = hljs.highlightAuto(text).value;
+                }
+            }
+        } catch (error) {
+            showAlert('error', 'Failed to load preview');
+        } finally {
+            loadingPreview = false;
+        }
+    }
+
     async function openPreview(file) {
+        selectedFile = file;
+        previewModal = true;
+        loadingPreview = true;
+
         if (canPreview(file.name)) {
-            selectedFile = file;
-            previewModal = true;
-            loadingPreview = true;
+            await loadPreview(file);
         }
     }
 
@@ -80,6 +116,40 @@
             uploading = false;
             fileInput.value = "";
         }
+    }
+
+    async function deleteFile(filename, event) {
+        event?.stopPropagation();
+        if (deletingFiles.has(filename)) return;
+        
+        $confirmModal = {
+            show: true,
+            title: 'Delete File',
+            message: `Are you sure you want to delete ${filename}?`,
+            onConfirm: async () => {
+                deletingFiles.add(filename);
+                try {
+                    const response = await fetch('/api/v1/delete', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename })
+                    });
+                    
+                    if (!response.ok) {
+                        const data = await response.json();
+                        throw new Error(data.error || 'Failed to delete file');
+                    }
+                    
+                    // Remove file from local state
+                    files = files.filter(f => f.name !== filename);
+                    showAlert('success', 'File deleted successfully');
+                } catch (error) {
+                    showAlert('error', error.message);
+                } finally {
+                    deletingFiles.delete(filename);
+                }
+            }
+        };
     }
 </script>
 
@@ -167,15 +237,26 @@
                                     </p>
                                 </div>
                             </div>
-                            <button
-                                class="p-2 rounded-full hover:bg-[#45475A] text-[#CDD6F4] disabled:opacity-50"
-                                on:click={(e) => downloadFile(file.name, e)}
-                                disabled={downloadingFiles.has(file.name)}
-                            >
-                                <span class="material-icons {downloadingFiles.has(file.name) ? 'animate-spin' : ''}">
-                                    {downloadingFiles.has(file.name) ? 'sync' : 'download'}
-                                </span>
-                            </button>
+                            <div class="flex gap-2">
+                                <button
+                                    class="p-2 rounded-full hover:bg-[#45475A] text-[#CDD6F4] disabled:opacity-50"
+                                    on:click={(e) => downloadFile(file.name, e)}
+                                    disabled={downloadingFiles.has(file.name)}
+                                >
+                                    <span class="material-icons {downloadingFiles.has(file.name) ? 'animate-spin' : ''}">
+                                        {downloadingFiles.has(file.name) ? 'sync' : 'download'}
+                                    </span>
+                                </button>
+                                <button
+                                    class="p-2 rounded-full hover:bg-[#45475A] text-[#F38BA8] disabled:opacity-50"
+                                    on:click={(e) => deleteFile(file.name, e)}
+                                    disabled={deletingFiles.has(file.name)}
+                                >
+                                    <span class="material-icons {deletingFiles.has(file.name) ? 'animate-spin' : ''}">
+                                        {deletingFiles.has(file.name) ? 'sync' : 'delete'}
+                                    </span>
+                                </button>
+                            </div>
                         </div>
                     {/each}
                 </div>
@@ -215,24 +296,45 @@
                         <img
                             src={`/api/v1/download?file=${encodeURIComponent(selectedFile.name)}`}
                             alt={selectedFile.name}
-                            class="max-h-[70vh] mx-auto"
+                            class="max-h-[70vh] mx-auto object-contain"
                             class:hidden={loadingPreview}
                             on:load={() => loadingPreview = false}
                         />
                     {:else if selectedFile.name.match(/\.pdf$/i)}
                         <iframe
-                            src={`/api/v1/download?file=${encodeURIComponent(selectedFile.name)}`}
+                            src={`/api/v1/download?file=${encodeURIComponent(selectedFile.name)}#view=FitH`}
                             class="w-full h-[70vh]"
                             class:hidden={loadingPreview}
                             on:load={() => loadingPreview = false}
                             title={selectedFile.name}
                         ></iframe>
+                    {:else if selectedFile.name.match(/\.(txt|md|js|py|java|cpp|h|c|css|html|json|yaml|yml|xml|svg|sh|ini|config|log)$/i)}
+                        <div class="bg-[#11111b] rounded-lg p-4 max-h-[70vh] overflow-auto">
+                            {#if selectedFile.name.endsWith('.md')}
+                                {@html previewContent}
+                            {:else}
+                                <pre><code class="hljs">{@html previewContent}</code></pre>
+                            {/if}
+                        </div>
+                    {:else}
+                        <div class="flex flex-col items-center justify-center h-[70vh] text-[#6C7086]">
+                            <span class="material-icons text-4xl mb-4">file_present</span>
+                            <p>Preview not available</p>
+                            <button
+                                class="mt-4 px-4 py-2 bg-[#89B4FA] hover:bg-[#74C7EC] text-[#1E1E2E] rounded-lg"
+                                on:click={(e) => downloadFile(selectedFile.name, e)}
+                            >
+                                Download File
+                            </button>
+                        </div>
                     {/if}
                 </div>
             </div>
         </div>
     </div>
 {/if}
+
+<ConfirmModal />
 
 <style>
     @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
