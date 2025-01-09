@@ -24,10 +24,11 @@
         Download,
         RefreshCw,
         HardDrive,
+        FileEdit,
     } from "lucide-svelte";
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
-    import { browser } from '$app/environment';
+    import { browser } from "$app/environment";
 
     export let data;
 
@@ -41,6 +42,7 @@
     let downloadingFiles = new Set();
     let loadingPreview = false;
     let deletingFiles = new Set();
+    let renamingFiles = new Set();
     let previewContent = "";
     let currentPath = [];
     let currentFolder = data.files;
@@ -107,10 +109,10 @@
 
     async function openPreview(file, name) {
         if (!file || !name) return;
-        
+
         selectedFile = {
             ...file,
-            name
+            name,
         };
         previewModal = true;
         loadingPreview = true;
@@ -201,7 +203,7 @@
                     }
 
                     delete currentFolder[filename];
-                    currentFolder = currentFolder; 
+                    currentFolder = currentFolder;
                     showAlert("success", "File deleted successfully");
                 } catch (error) {
                     showAlert("error", error.message);
@@ -210,6 +212,42 @@
                 }
             },
         };
+    }
+
+    async function renameFile(filename, event) {
+        event?.stopPropagation();
+        if (renamingFiles.has(filename)) return;
+
+        const newName = prompt("Enter new name:", filename);
+        if (!newName || newName === filename) return;
+
+        renamingFiles.add(filename);
+        try {
+            const oldPath = [...currentPath, filename].join("/");
+            const newPath = [...currentPath, newName].join("/");
+
+            const response = await fetch("/api/v1/rename", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ oldPath, newPath }),
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || "Failed to rename file");
+            }
+
+            // Update local state
+            const item = currentFolder[filename];
+            delete currentFolder[filename];
+            currentFolder[newName] = item;
+            currentFolder = currentFolder;
+            showAlert("success", "File renamed successfully");
+        } catch (error) {
+            showAlert("error", error.message);
+        } finally {
+            renamingFiles.delete(filename);
+        }
     }
 
     function navigateToFolder(folderName) {
@@ -260,9 +298,9 @@
 
     onMount(() => {
         if (browser) {
-            const pathParam = new URL(window.location).searchParams.get('path');
+            const pathParam = new URL(window.location).searchParams.get("path");
             if (pathParam) {
-                currentPath = pathParam.split('/').filter(Boolean);
+                currentPath = pathParam.split("/").filter(Boolean);
                 currentFolder = getCurrentFolder();
             }
         }
@@ -302,14 +340,20 @@
                 <h1 class="text-2xl font-semibold text-[#CDD6F4]">Files</h1>
                 <div class="flex items-center gap-2 text-[#6C7086]">
                     <HardDrive size={16} />
-                    <div class="w-48 h-2 bg-[#313244] rounded-full overflow-hidden">
+                    <div
+                        class="w-48 h-2 bg-[#313244] rounded-full overflow-hidden"
+                    >
                         <div
                             class="h-full bg-[#89B4FA] transition-all"
-                            style="width: {(data.user.storageUsed / data.user.storageQuota) * 100}%"
+                            style="width: {(data.user.storageUsed /
+                                data.user.storageQuota) *
+                                100}%"
                         />
                     </div>
                     <span class="text-sm">
-                        {formatBytes(data.user.storageUsed)} / {formatBytes(data.user.storageQuota)}
+                        {formatBytes(data.user.storageUsed)} / {formatBytes(
+                            data.user.storageQuota,
+                        )}
                     </span>
                 </div>
             </div>
@@ -436,35 +480,61 @@
                                     <p class="text-[#CDD6F4] truncate">
                                         {name}
                                     </p>
-                                    <div class="flex items-center justify-between">
+                                    <div
+                                        class="flex items-center justify-between"
+                                    >
                                         <p class="text-sm text-[#6C7086]">
                                             {item.type === "folder"
                                                 ? `${Object.keys(item.children).length} items`
                                                 : `${formatBytes(item.size)} • ${new Date(item.modified).toLocaleDateString()}`}
                                         </p>
                                         {#if item.type !== "folder"}
-                                            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div
+                                                class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
                                                 <button
                                                     class="p-1.5 rounded-lg hover:bg-[#45475A] text-[#CDD6F4]"
-                                                    on:click={(e) => downloadFile(name, e)}
-                                                    disabled={downloadingFiles.has(name)}
+                                                    on:click={(e) =>
+                                                        downloadFile(name, e)}
+                                                    disabled={downloadingFiles.has(
+                                                        name,
+                                                    )}
                                                 >
                                                     {#if downloadingFiles.has(name)}
-                                                        <RefreshCw size={18} class="animate-spin" />
+                                                        <RefreshCw
+                                                            size={18}
+                                                            class="animate-spin"
+                                                        />
                                                     {:else}
                                                         <Download size={18} />
                                                     {/if}
                                                 </button>
                                                 <button
                                                     class="p-1.5 rounded-lg hover:bg-[#45475A] text-[#F38BA8]"
-                                                    on:click={(e) => deleteFile(name, e)}
-                                                    disabled={deletingFiles.has(name)}
+                                                    on:click={(e) =>
+                                                        deleteFile(name, e)}
+                                                    disabled={deletingFiles.has(
+                                                        name,
+                                                    )}
                                                 >
                                                     {#if deletingFiles.has(name)}
-                                                        <RefreshCw size={18} class="animate-spin" />
+                                                        <RefreshCw
+                                                            size={18}
+                                                            class="animate-spin"
+                                                        />
                                                     {:else}
                                                         <X size={18} />
                                                     {/if}
+                                                </button>
+                                                <button
+                                                    class="p-1.5 rounded-lg hover:bg-[#45475A] text-[#CDD6F4]"
+                                                    on:click={(e) =>
+                                                        renameFile(name, e)}
+                                                    disabled={renamingFiles.has(
+                                                        name,
+                                                    )}
+                                                >
+                                                    <FileEdit size={18} />
                                                 </button>
                                             </div>
                                         {/if}
