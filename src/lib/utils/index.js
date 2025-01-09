@@ -87,7 +87,7 @@ export function canPreview(filename) {
         // Video
         'mp4', 'webm',
         // Audio
-        'mp3', 'wav',
+        'mp3', 'wav', 'flac', 'ogg', 'm4a',
         // Text/Code
         'txt', 'md', 'json', 'js', 'py', 'java', 'cpp', 'h', 'c', 'css', 'html',
         'yaml', 'yml', 'xml', 'sh', 'ini', 'config', 'log'
