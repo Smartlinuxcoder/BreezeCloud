@@ -46,6 +46,8 @@
     let previewContent = "";
     let currentPath = [];
     let currentFolder = data.files;
+    let uploadProgress = new Map();
+    let totalUploadProgress = 0;
 
     function showAlert(type, message, duration = 3000) {
         alert = { show: true, type, message };
@@ -152,31 +154,62 @@
     }
 
     async function handleFileUpload() {
-        if (!fileInput?.files?.[0]) return;
+        if (!fileInput?.files?.length) return;
         uploading = true;
         alert.show = false;
+        uploadProgress.clear();
+        totalUploadProgress = 0;
 
         try {
-            const formData = new FormData();
-            formData.append("file", fileInput.files[0]);
-            formData.append("folder", currentPath.join("/"));
+            const files = Array.from(fileInput.files);
+            const uploads = files.map(async (file) => {
+                uploadProgress.set(file.name, 0);
+                uploadProgress = uploadProgress;
 
-            const response = await fetch("/api/v1/upload", {
-                method: "POST",
-                body: formData,
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("folder", currentPath.join("/"));
+
+                const xhr = new XMLHttpRequest();
+                
+                // Track individual file progress
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const progress = (e.loaded / e.total) * 100;
+                        uploadProgress.set(file.name, progress);
+                        uploadProgress = uploadProgress;
+                        
+                        // Calculate total progress
+                        totalUploadProgress = Array.from(uploadProgress.values()).reduce((a, b) => a + b, 0) / files.length;
+                    }
+                };
+
+                return new Promise((resolve, reject) => {
+                    xhr.open("POST", "/api/v1/upload");
+                    
+                    xhr.onload = () => {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            resolve(xhr.response);
+                        } else {
+                            reject(new Error(xhr.statusText));
+                        }
+                    };
+                    
+                    xhr.onerror = () => reject(new Error("Upload failed"));
+                    xhr.send(formData);
+                });
             });
 
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.error || "Upload failed");
-
-            showAlert("success", "File uploaded successfully!");
-            // Refresh the page to show new file
+            await Promise.all(uploads);
+            showAlert("success", "Files uploaded successfully!");
             window.location.reload();
         } catch (error) {
             showAlert("error", error.message);
         } finally {
             uploading = false;
             fileInput.value = "";
+            uploadProgress.clear();
+            totalUploadProgress = 0;
         }
     }
 
@@ -378,6 +411,7 @@
                         disabled={uploading}
                         class="hidden"
                         id="file-upload"
+                        multiple
                     />
                     <label
                         for="file-upload"
@@ -626,6 +660,28 @@
                     {/if}
                 </div>
             </div>
+        </div>
+    </div>
+{/if}
+
+{#if uploading}
+    <div class="fixed bottom-4 right-4 bg-[#1E1E2E] p-4 rounded-lg shadow-lg border border-[#313244] max-w-md w-full">
+        <div class="flex justify-between items-center mb-2">
+            <span class="text-[#CDD6F4]">Uploading files...</span>
+            <span class="text-[#89B4FA]">{Math.round(totalUploadProgress)}%</span>
+        </div>
+        <div class="w-full h-2 bg-[#313244] rounded-full overflow-hidden">
+            <div
+                class="h-full bg-[#89B4FA] transition-all"
+                style="width: {totalUploadProgress}%"
+            />
+        </div>
+        <div class="mt-2 max-h-32 overflow-y-auto">
+            {#each Array.from(uploadProgress) as [filename, progress]}
+                <div class="text-sm text-[#6C7086] mt-1">
+                    {filename} - {Math.round(progress)}%
+                </div>
+            {/each}
         </div>
     </div>
 {/if}
