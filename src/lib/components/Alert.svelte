@@ -1,4 +1,3 @@
-<!-- src/lib/components/Alert.svelte -->
 <script>
     export let type = ""; // can be 'success', 'error', 'warning', or 'info'
     export let message = "";
