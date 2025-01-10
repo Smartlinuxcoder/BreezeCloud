@@ -14,8 +14,12 @@
     <title>{pageName}</title>
 </svelte:head>
 
-<main class="min-h-screen flex flex-col bg-gradient-to-br from-[#1e1e2e] to-[#302d41]">
-    <header class="backdrop-blur-lg bg-[#1e1e2e]/70 border-b border-[#6e6c7e]/20 shadow-lg">
+<main
+    class="min-h-screen flex flex-col bg-gradient-to-br from-[#1e1e2e] to-[#302d41]"
+>
+    <header
+        class="backdrop-blur-lg bg-[#1e1e2e]/70 border-b border-[#6e6c7e]/20 shadow-lg"
+    >
         <div class="container mx-auto px-4 py-3">
             <div class="flex flex-col sm:flex-row items-center justify-between">
                 <div class="flex items-center mb-4 sm:mb-0">
@@ -35,50 +39,52 @@
                     </h1>
                 </div>
                 {#if !user}
-                <nav class="flex space-x-4">
-                    <a
-                        href="/login"
-                        class="text-[#a6adc8] hover:text-[#89b4fa] transition-colors duration-200 text-lg"
-                        >Sign In</a
-                    >
-                    <a
-                        href="/register"
-                        class="text-[#a6adc8] hover:text-[#89b4fa] transition-colors duration-200 text-lg"
-                        >Register</a
-                    >
-                    <a
-                        href="/dashboard"
-                        class="text-[#a6adc8] hover:text-[#89b4fa] transition-colors duration-200 text-lg"
-                        >Dash</a
-                    >
-                </nav>
+                    <nav class="flex space-x-4">
+                        <a
+                            href="/login"
+                            class="text-[#a6adc8] hover:text-[#89b4fa] transition-colors duration-200 text-lg"
+                            >Sign In</a
+                        >
+                        <a
+                            href="/register"
+                            class="text-[#a6adc8] hover:text-[#89b4fa] transition-colors duration-200 text-lg"
+                            >Register</a
+                        >
+                        <a
+                            href="/dashboard"
+                            class="text-[#a6adc8] hover:text-[#89b4fa] transition-colors duration-200 text-lg"
+                            >Dash</a
+                        >
+                    </nav>
                 {:else}
-                <nav class="flex space-x-4">
-                    <a
-                        href="/dashboard"
-                        class="text-[#a6adc8] hover:text-[#89b4fa] transition-colors duration-200 text-lg"
-                        >Dash</a
-                    >
-                    <a
-                        href="/logout"
-                        class="text-[#a6adc8] hover:text-[#89b4fa] transition-colors duration-200 text-lg"
-                        >Log Out</a
-                    >
-                </nav>
+                    <nav class="flex space-x-4">
+                        <a
+                            href="/dashboard"
+                            class="text-[#a6adc8] hover:text-[#89b4fa] transition-colors duration-200 text-lg"
+                            >Dash</a
+                        >
+                        <a
+                            href="/logout"
+                            class="text-[#a6adc8] hover:text-[#89b4fa] transition-colors duration-200 text-lg"
+                            >Log Out</a
+                        >
+                    </nav>
                 {/if}
             </div>
         </div>
     </header>
 
     <div class="flex-grow container mx-auto px-4 py-8">
-        <div class="backdrop-blur-lg bg-[#1e1e2e]/70 border border-[#6e6c7e]/20 rounded-xl shadow-xl p-6">
+        <div class="rounded-lg p-4">
             <slot></slot>
         </div>
     </div>
 
-    <footer class="backdrop-blur-lg bg-[#1e1e2e]/70 border-t border-[#6e6c7e]/20 text-[#cdd6f4] py-4 mt-auto">
+    <footer
+        class="backdrop-blur-lg bg-[#1e1e2e]/70 border-t border-[#6e6c7e]/20 text-[#cdd6f4] py-4 mt-auto"
+    >
         <div class="container mx-auto px-4 text-center text-sm">
-            Copyright &copy; 2024
+            Copyright &copy; 2025
             <a
                 href="https://smartlinux.xyz"
                 target="_blank"
@@ -101,4 +107,5 @@
         margin: 0;
         background: #1e1e2e;
     }
+
 </style>

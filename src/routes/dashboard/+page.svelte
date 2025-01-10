@@ -367,7 +367,7 @@
     </div>
 {/if}
 
-<div class="min-h-screen bg-[#1E1E2E] p-4">
+<div class="min-h-screen bg-[#1E1E2E] p-6 rounded-lg">
     <div class="max-w-7xl mx-auto">
         <!-- Header Section -->
         <div
@@ -432,6 +432,13 @@
                         {uploading ? "Uploading..." : "Upload"}
                     </label>
                 </div>
+                <button
+                on:click={createFolder}
+                class="flex items-center gap-2 px-4 py-2 bg-[#89B4FA] hover:bg-[#74C7EC] text-[#1E1E2E] rounded-lg"
+            >
+                <FolderPlus size={24} />
+                New Folder
+            </button>
             </div>
         </div>
 
@@ -461,13 +468,7 @@
         </div>
 
         <div class="flex items-center gap-4">
-            <button
-                on:click={createFolder}
-                class="flex items-center gap-2 px-4 py-2 bg-[#89B4FA] hover:bg-[#74C7EC] text-[#1E1E2E] rounded-lg"
-            >
-                <FolderPlus size={24} />
-                New Folder
-            </button>
+            
         </div>
 
         <!-- Files Section -->
