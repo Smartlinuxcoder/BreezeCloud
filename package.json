@@ -13,6 +13,7 @@
 		"script:syncfiles": "bun run scripts/sync-file-tree.js"
 	},
 	"devDependencies": {
+		"@catppuccin/highlightjs": "^1.0.0",
 		"@sveltejs/adapter-auto": "^3.0.0",
 		"@sveltejs/kit": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^4.0.0",

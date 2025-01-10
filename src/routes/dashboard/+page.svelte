@@ -5,7 +5,7 @@
     import ConfirmModal from "$lib/components/Confirmation.svelte";
     import { onMount } from "svelte";
     import hljs from "highlight.js";
-    import "highlight.js/styles/github-dark.css";
+    import "@catppuccin/highlightjs/css/catppuccin-mocha.css";
     import { marked } from "marked";
     import {
         Upload,
@@ -171,22 +171,26 @@
                 formData.append("folder", currentPath.join("/"));
 
                 const xhr = new XMLHttpRequest();
-                
+
                 // Track individual file progress
                 xhr.upload.onprogress = (e) => {
                     if (e.lengthComputable) {
                         const progress = (e.loaded / e.total) * 100;
                         uploadProgress.set(file.name, progress);
                         uploadProgress = uploadProgress;
-                        
+
                         // Calculate total progress
-                        totalUploadProgress = Array.from(uploadProgress.values()).reduce((a, b) => a + b, 0) / files.length;
+                        totalUploadProgress =
+                            Array.from(uploadProgress.values()).reduce(
+                                (a, b) => a + b,
+                                0,
+                            ) / files.length;
                     }
                 };
 
                 return new Promise((resolve, reject) => {
                     xhr.open("POST", "/api/v1/upload");
-                    
+
                     xhr.onload = () => {
                         if (xhr.status >= 200 && xhr.status < 300) {
                             resolve(xhr.response);
@@ -194,7 +198,7 @@
                             reject(new Error(xhr.statusText));
                         }
                     };
-                    
+
                     xhr.onerror = () => reject(new Error("Upload failed"));
                     xhr.send(formData);
                 });
@@ -643,16 +647,20 @@
                             {/if}
                         </div>
                     {:else if selectedFile.name.match(/\.(mp3|wav|flac|ogg|m4a)$/i)}
-                        <div class="flex flex-col items-center justify-center p-4">
-                            <div class="w-full max-w-lg bg-[#11111b] rounded-lg p-4">
-                                <audio 
+                        <div
+                            class="flex flex-col items-center justify-center p-4"
+                        >
+                            <div
+                                class="w-full max-w-lg bg-[#11111b] rounded-lg p-4"
+                            >
+                                <audio
                                     controls
                                     class="w-full"
                                     src={`/api/v1/download?file=${encodeURIComponent([...currentPath, selectedFile.name].join("/"))}`}
                                     on:load={() => (loadingPreview = false)}
                                 >
-                                    Your browser does not support the audio element.
-                                    Bruh what are you using?
+                                    Your browser does not support the audio
+                                    element. Bruh what are you using?
                                 </audio>
                             </div>
                         </div>
@@ -679,10 +687,14 @@
 {/if}
 
 {#if uploading}
-    <div class="fixed bottom-4 right-4 bg-[#1E1E2E] p-4 rounded-lg shadow-lg border border-[#313244] max-w-md w-full z-50">
+    <div
+        class="fixed bottom-4 right-4 bg-[#1E1E2E] p-4 rounded-lg shadow-lg border border-[#313244] max-w-md w-full z-50"
+    >
         <div class="flex justify-between items-center mb-2">
             <span class="text-[#CDD6F4] truncate">Uploading files...</span>
-            <span class="text-[#89B4FA] ml-2">{Math.round(totalUploadProgress)}%</span>
+            <span class="text-[#89B4FA] ml-2"
+                >{Math.round(totalUploadProgress)}%</span
+            >
         </div>
         <div class="w-full h-2 bg-[#313244] rounded-full overflow-hidden">
             <div
@@ -692,9 +704,13 @@
         </div>
         <div class="mt-2 max-h-32 overflow-y-auto">
             {#each Array.from(uploadProgress) as [filename, progress]}
-                <div class="text-sm text-[#6C7086] mt-1 flex justify-between items-center">
+                <div
+                    class="text-sm text-[#6C7086] mt-1 flex justify-between items-center"
+                >
                     <span class="truncate flex-1">{filename}</span>
-                    <span class="ml-2 flex-shrink-0">{Math.round(progress)}%</span>
+                    <span class="ml-2 flex-shrink-0"
+                        >{Math.round(progress)}%</span
+                    >
                 </div>
             {/each}
         </div>
