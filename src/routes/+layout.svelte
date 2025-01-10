@@ -73,13 +73,15 @@
             </div>
         </div>
     </header>
-
-    <div class="flex-grow container mx-auto py-8">
-        <div class="rounded-lg p-4">
-            <slot></slot>
+    {#if pageName === "Breezecloud"}
+        <slot></slot>
+    {:else}
+        <div class="flex-grow container mx-auto py-8">
+            <div class="rounded-lg p-4">
+                <slot></slot>
+            </div>
         </div>
-    </div>
-
+    {/if}
     <footer
         class="backdrop-blur-lg bg-[#1e1e2e]/70 border-t border-[#6e6c7e]/20 text-[#cdd6f4] py-4 mt-auto"
     >
@@ -107,5 +109,4 @@
         margin: 0;
         background: #1e1e2e;
     }
-
 </style>
