@@ -1,7 +1,7 @@
 <script>
     import { fade, fly } from 'svelte/transition';
     import { onMount } from 'svelte';
-    import { Upload, Shield, Clock, Cloud, CloudLightning } from 'lucide-svelte';
+    import { Upload, Shield, Clock, Cloud, CloudLightning , PackagePlus, Receipt } from 'lucide-svelte';
     
     let mounted = false;
     onMount(() => {
@@ -18,7 +18,7 @@
 </script>
 
 <div class="relative min-h-[calc(100vh-12rem)] overflow-hidden">
-    <!-- Animated blobs -->
+    <!-- Animated balls -->
     {#if mounted}
         {#each Array(5) as _, i}
             <div
@@ -97,7 +97,16 @@
                         title: "It's secure",
                         description: "Brother, you can self-host if you want"
                     },
-                    
+                    {
+                        icon: PackagePlus,
+                        title: "Expandable",
+                        description: "I like my extensions drippy bruh"
+                    },
+                    {
+                        icon: Receipt,
+                        title: "It's free",
+                        description: "I forgot to setup Stripe"
+                    },
                     
                 ] as feature}
                     <div class="p-6 rounded-xl bg-[#1e1e2e]/50 backdrop-blur-sm border border-[#313244] hover:border-[#89b4fa] transition-colors">
