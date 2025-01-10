@@ -74,7 +74,7 @@
         </div>
     </header>
 
-    <div class="flex-grow container mx-auto px-4 py-8">
+    <div class="flex-grow container mx-auto py-8">
         <div class="rounded-lg p-4">
             <slot></slot>
         </div>
