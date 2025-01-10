@@ -30,6 +30,8 @@
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
     import { browser } from "$app/environment";
+    import { writable } from 'svelte/store';
+    import debounce from 'lodash/debounce';
 
     export let data;
 
@@ -50,6 +52,10 @@
     let uploadProgress = new Map();
     let totalUploadProgress = 0;
 
+    const folderCache = new Map();
+    const currentFolderStore = writable({});
+    const isNavigating = writable(false);
+
     function showAlert(type, message, duration = 3000) {
         alert = { show: true, type, message };
         setTimeout(() => {
@@ -57,7 +63,6 @@
         }, duration);
     }
 
-    // Initialize currentPath from URL
     $: {
         const pathParam = $page.url.searchParams.get("path");
         if (pathParam) {
@@ -66,7 +71,6 @@
         }
     }
 
-    // Update URL when path changes
     $: if (browser) {
         const url = new URL(window.location);
         if (currentPath.length > 0) {
@@ -86,7 +90,6 @@
             );
             if (!response.ok) throw new Error("Failed to load preview");
 
-            // Handle different file types
             if (
                 file.name.match(
                     /\.(txt|md|js|py|java|cpp|h|c|css|html|json|yaml|yml|xml|svg|sh|ini|config|log)$/i,
@@ -94,11 +97,9 @@
             ) {
                 const text = await response.text();
 
-                // Handle markdown files
                 if (file.name.endsWith(".md")) {
                     previewContent = marked(text);
                 } else {
-                    // Apply syntax highlighting for code files
                     const extension = file.name.split(".").pop().toLowerCase();
                     previewContent = hljs.highlightAuto(text).value;
                 }
@@ -288,22 +289,42 @@
         }
     }
 
+    const debouncedNavigate = debounce((newPath) => {
+        isNavigating.set(true);
+        
+        setTimeout(() => {
+            currentPath = newPath;
+            const folder = getCurrentFolder();
+            currentFolderStore.set(folder);
+            currentFolder = folder;
+            isNavigating.set(false);
+        }, 0);
+    }, 150);
+
     function navigateToFolder(folderName) {
-        currentPath = [...currentPath, folderName];
-        currentFolder = getCurrentFolder().children;
+        const newPath = [...currentPath, folderName];
+        debouncedNavigate(newPath);
     }
 
     function navigateUp() {
-        currentPath.pop();
-        currentFolder = getCurrentFolder();
-        currentPath = currentPath; // trigger reactivity
+        const newPath = currentPath.slice(0, -1);
+        debouncedNavigate(newPath);
     }
 
     function getCurrentFolder() {
+        const cacheKey = currentPath.join('/');
+        
+        if (folderCache.has(cacheKey)) {
+            return folderCache.get(cacheKey);
+        }
+
         let folder = data.files;
         for (const pathPart of currentPath) {
-            folder = folder[pathPart].children;
+            folder = folder[pathPart]?.children;
+            if (!folder) return {};
         }
+        
+        folderCache.set(cacheKey, folder);
         return folder;
     }
 
@@ -342,7 +363,22 @@
                 currentFolder = getCurrentFolder();
             }
         }
+        return () => {
+            folderCache.clear();
+        };
     });
+
+    $: {
+        if (!$isNavigating) {
+            currentFolder = getCurrentFolder();
+        }
+    }
+
+    let itemsPerPage = 50;
+    let currentPage = 0;
+
+    $: paginatedItems = Object.entries(currentFolder)
+        .slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
 </script>
 
 <!-- Alert component -->
@@ -472,22 +508,21 @@
             
         </div>
 
-        <!-- Files Section -->
         <div class="bg-[#181825] rounded-xl shadow-sm border border-[#313244]">
-            {#if Object.keys(currentFolder).length === 0}
+            {#if $isNavigating}
+                <div class="text-center py-32">
+                    <RefreshCw size={48} class="text-[#6C7086] animate-spin mx-auto" />
+                    <p class="text-[#CDD6F4] mt-4">Loading folder contents...</p>
+                </div>
+            {:else if Object.keys(currentFolder).length === 0}
+                <!-- Empty folder UI -->
                 <div class="text-center py-32" transition:slide>
                     <Upload size={48} class="text-[#6C7086] mb-4 mx-auto" />
                     <p class="text-[#CDD6F4]">No files uploaded yet</p>
-                    <p class="text-sm text-[#6C7086]">
-                        Upload your first file to get started
-                    </p>
+                    <p class="text-sm text-[#6C7086]">Upload your first file to get started</p>
                 </div>
             {:else}
-                <div
-                    class="p-4 {viewMode === 'grid'
-                        ? 'grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3'
-                        : 'space-y-2'}"
-                >
+                <div class="p-4 {viewMode === 'grid' ? 'grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3' : 'space-y-2'}">
                     {#if currentPath.length > 0}
                         <div
                             class="group p-3 rounded-lg hover:bg-[#313244] cursor-pointer"
@@ -500,7 +535,7 @@
                         </div>
                     {/if}
 
-                    {#each Object.entries(currentFolder) as [name, item]}
+                    {#each paginatedItems as [name, item]}
                         <div
                             class="group p-3 rounded-lg hover:bg-[#313244] cursor-pointer"
                             on:click={() =>
