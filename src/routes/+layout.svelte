@@ -23,7 +23,7 @@
         <div class="container mx-auto px-4 py-3">
             <div class="flex flex-col sm:flex-row items-center justify-between">
                 <div class="flex items-center mb-4 sm:mb-0">
-                    {#if pageName === "BreezeCloud"}
+                    {#if pageName === "Breezecloud"}
                         <img src={favicon} alt="Logo" class="w-12 h-12 mr-4" />
                     {:else}
                         <a
