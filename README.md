@@ -62,6 +62,8 @@ Create a `.env` file with these vars or get the template from `.env.example`:
 # Your database connection string
 DATABASE_URL=
 
+PUBLIC_URL='https://cloud.smart.is-a.dev'
+
 # JWT secret for auth (make it strong fam)
 JWT_SECRET=
 
