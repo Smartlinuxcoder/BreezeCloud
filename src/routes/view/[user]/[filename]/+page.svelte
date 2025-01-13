@@ -88,14 +88,14 @@
                     </div>
                 {:else if filename.match(/\.(jpg|jpeg|png|gif|webp)$/i)}
                     <img
-                        src={`/api/v1/download?file=${encodeURIComponent(filePath)}`}
+                        src={`/api/v1/public/download?file=${encodeURIComponent(filePath)}`}
                         alt={filename}
                         class="max-h-[70vh] mx-auto object-contain"
                         on:error={() => error = "Failed to load image"}
                     />
                 {:else if filename.match(/\.pdf$/i)}
                     <iframe
-                        src={`/api/v1/download?file=${encodeURIComponent(filePath)}#view=FitH`}
+                        src={`/api/v1/public/download?file=${encodeURIComponent(filePath)}#view=FitH`}
                         class="w-full h-[70vh]"
                         class:hidden={loadingPreview}
                         on:load={() => (loadingPreview = false)}
@@ -115,7 +115,7 @@
                             <audio
                                 controls
                                 class="w-full"
-                                src={`/api/v1/download?file=${encodeURIComponent(filePath)}`}
+                                src={`/api/v1/public/download?file=${encodeURIComponent(filePath)}`}
                                 on:load={() => (loadingPreview = false)}
                             >
                                 Your browser does not support the audio element.
