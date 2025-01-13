@@ -5,7 +5,7 @@
     import "@catppuccin/highlightjs/css/catppuccin-mocha.css";
     import { marked } from "marked";
     import { X, RefreshCw, Download, File, AlertCircle } from "lucide-svelte";
-    import { PUBLIC_URL } from "$env/static/public";
+    import { env } from "$env/dynamic/public";
 
     let loadingPreview = true;
     let previewContent = "";
@@ -26,7 +26,7 @@
             mediaType = "file";
         }
         
-        const baseUrl = PUBLIC_URL; 
+        const baseUrl = env.PUBLIC_URL; 
         absoluteUrl = `${baseUrl}/api/v1/public/download?file=${encodeURIComponent(filePath)}`;
     }
 
