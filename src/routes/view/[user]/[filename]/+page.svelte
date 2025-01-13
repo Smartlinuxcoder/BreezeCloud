@@ -5,15 +5,30 @@
     import "@catppuccin/highlightjs/css/catppuccin-mocha.css";
     import { marked } from "marked";
     import { X, RefreshCw, Download, File, AlertCircle } from "lucide-svelte";
+    import { PUBLIC_URL } from "$env/static/public";
 
-    export let data;
     let loadingPreview = true;
     let previewContent = "";
     let error = null;
+    let mediaType = "";
+    let absoluteUrl = ""; 
     
     $: user = $page.params.user;
     $: filename = $page.params.filename;
     $: filePath = `/${user}/${filename}`;
+
+    $: {
+        if (filename?.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+            mediaType = "image";
+        } else if (filename?.match(/\.(mp4|webm|mov|avi)$/i)) {
+            mediaType = "video";
+        } else {
+            mediaType = "file";
+        }
+        
+        const baseUrl = PUBLIC_URL; 
+        absoluteUrl = `${baseUrl}/api/v1/public/download?file=${encodeURIComponent(filePath)}`;
+    }
 
     async function loadPreview() {
         error = null;
@@ -50,6 +65,34 @@
         loadPreview();
     });
 </script>
+
+<svelte:head>
+    <title>{filename} - Shared by {user}</title>
+    <meta name="description" content={`View {filename} shared by {user} on BreezeCloud`} />
+    
+    <meta property="og:title" content={`${filename} - Shared by ${user}`} />
+    <meta property="og:description" content={`View ${filename} shared by ${user} on BreezeCloud`} />
+    <meta property="og:url" content={window?.location?.href} />
+    
+    {#if mediaType === "image"}
+        <meta property="og:image" content={absoluteUrl} />
+        <meta property="og:type" content="image" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={absoluteUrl} />
+    {:else if mediaType === "video"}
+        <meta property="og:video" content={absoluteUrl} />
+        <meta property="og:video:type" content="video/mp4" />
+        <meta property="og:type" content="video.other" />
+        <meta name="twitter:card" content="player" />
+        <meta name="twitter:player" content={absoluteUrl} />
+    {:else}
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary" />
+    {/if}
+    
+    <meta name="twitter:title" content={`${filename} - Shared by {user}`} />
+    <meta name="twitter:description" content={`View ${filename} shared by ${user} on BreezeCloud`} />
+</svelte:head>
 
 <div class="min-h-screen bg-[#1E1E2E] p-6 rounded-lg">
     <div class="max-w-4xl mx-auto">
