@@ -91,7 +91,7 @@
         try {
             const filePath = [...currentPath, file.name].join("/");
             const response = await fetch(
-                `/api/v1/download?file=${encodeURIComponent(filePath)}`,
+                `/api/v1/public/download?file=${encodeURIComponent(filePath)}`,
             );
             if (!response.ok) throw new Error("Failed to load preview");
 
@@ -140,7 +140,7 @@
         try {
             const filePath = [...currentPath, filename].join("/");
             const response = await fetch(
-                `/api/v1/download?file=${encodeURIComponent(filePath)}`,
+                `/api/v1/public/download?file=${encodeURIComponent(filePath)}`,
             );
             if (!response.ok) throw new Error("Download failed");
 
@@ -728,7 +728,7 @@
 
                     {#if selectedFile.name.match(/\.(jpg|jpeg|png|gif|webp)$/i)}
                         <img
-                            src={`/api/v1/download?file=${encodeURIComponent([...currentPath, selectedFile.name].join("/"))}`}
+                            src={`/api/v1/public/download?file=${encodeURIComponent([...currentPath, selectedFile.name].join("/"))}`}
                             alt={selectedFile.name}
                             class="max-h-[70vh] mx-auto object-contain"
                             class:hidden={loadingPreview}
@@ -736,7 +736,7 @@
                         />
                     {:else if selectedFile.name.match(/\.pdf$/i)}
                         <iframe
-                            src={`/api/v1/download?file=${encodeURIComponent([...currentPath, selectedFile.name].join("/"))}#view=FitH`}
+                            src={`/api/v1/public/download?file=${encodeURIComponent([...currentPath, selectedFile.name].join("/"))}#view=FitH`}
                             class="w-full h-[70vh]"
                             class:hidden={loadingPreview}
                             on:load={() => (loadingPreview = false)}
@@ -764,7 +764,7 @@
                                 <audio
                                     controls
                                     class="w-full"
-                                    src={`/api/v1/download?file=${encodeURIComponent([...currentPath, selectedFile.name].join("/"))}`}
+                                    src={`/api/v1/public/download?file=${encodeURIComponent([...currentPath, selectedFile.name].join("/"))}`}
                                     on:load={() => (loadingPreview = false)}
                                 >
                                     Your browser does not support the audio
