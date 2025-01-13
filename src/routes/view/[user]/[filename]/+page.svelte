@@ -93,14 +93,30 @@
                         class="max-h-[70vh] mx-auto object-contain"
                         on:error={() => error = "Failed to load image"}
                     />
+                {:else if filename.match(/\.(mp4|webm|mov|avi)$/i)}
+                    <div class="flex flex-col items-center justify-center p-4">
+                        <div class="w-full max-w-4xl bg-[#11111b] rounded-lg p-4">
+                            <video
+                                controls
+                                class="w-full rounded-lg"
+                                src={`/api/v1/public/download?file=${encodeURIComponent(filePath)}`}
+                                on:load={() => (loadingPreview = false)}
+                            >
+                                Your browser does not support the video element.
+                            </video>
+                        </div>
+                    </div>
                 {:else if filename.match(/\.pdf$/i)}
-                    <iframe
-                        src={`/api/v1/public/download?file=${encodeURIComponent(filePath)}#view=FitH`}
-                        class="w-full h-[70vh]"
-                        class:hidden={loadingPreview}
-                        on:load={() => (loadingPreview = false)}
-                        title={filename}
-                    ></iframe>
+                    <div class="flex flex-col items-center justify-center p-4">
+                        <div class="w-full h-[70vh] bg-[#11111b] rounded-lg p-4">
+                            <iframe
+                                src={`/api/v1/public/download?file=${encodeURIComponent(filePath)}#view=FitH`}
+                                class="w-full h-full rounded-lg"
+                                title={filename}
+                                on:load={() => (loadingPreview = false)}
+                            ></iframe>
+                        </div>
+                    </div>
                 {:else if filename.match(/\.(txt|md|js|py|java|cpp|h|c|css|html|json|yaml|yml|xml|svg|sh|ini|config|log)$/i)}
                     <div class="bg-[#11111b] rounded-lg p-4 max-h-[70vh] overflow-auto">
                         {#if filename.endsWith(".md")}
