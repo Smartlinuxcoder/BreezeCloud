@@ -20,7 +20,8 @@ function createTreeFromPaths(objects) {
         current[part] = {
           type: 'file',
           size: obj.size,
-          modified: obj.lastModified
+          modified: obj.lastModified,
+          public: false
         };
       } else {
         current[part] = current[part] || { type: 'folder', children: {} };

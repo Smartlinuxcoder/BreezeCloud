@@ -26,6 +26,9 @@
         RefreshCw,
         HardDrive,
         FileEdit,
+        Eye,
+        EyeOff,
+        Share2,
     } from "lucide-svelte";
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
@@ -51,6 +54,8 @@
     let currentFolder = data.files;
     let uploadProgress = new Map();
     let totalUploadProgress = 0;
+    let toggleVisibilityFiles = new Set();
+    let shareUrl = "";
 
     const folderCache = new Map();
     const currentFolderStore = writable({});
@@ -286,6 +291,44 @@
             showAlert("error", error.message);
         } finally {
             renamingFiles.delete(filename);
+        }
+    }
+
+    async function toggleVisibility(filename, isPublic, event) {
+        event?.stopPropagation();
+        if (toggleVisibilityFiles.has(filename)) return;
+
+        toggleVisibilityFiles.add(filename);
+        try {
+            const filePath = [...currentPath, filename].join("/");
+            const response = await fetch("/api/v1/visibility", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    filePath,
+                    isPublic: !isPublic 
+                }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || "Failed to update visibility");
+            }
+
+            currentFolder[filename].public = !isPublic;
+            currentFolder = { ...currentFolder };
+
+            if (!isPublic) {
+                shareUrl = `${window.location.origin}/view/${data.user.username}/${filename}`;
+                await navigator.clipboard.writeText(shareUrl);
+                showAlert("success", "Share link copied to clipboard!");
+            }
+
+        } catch (error) {
+            showAlert("error", error.message);
+        } finally {
+            toggleVisibilityFiles.delete(filename);
+            toggleVisibilityFiles = new Set(toggleVisibilityFiles);
         }
     }
 
@@ -611,6 +654,34 @@
                                                 >
                                                     <FileEdit size={18} />
                                                 </button>
+                                                <button
+                                                    class="p-1.5 rounded-lg hover:bg-[#45475A] text-[#CDD6F4]"
+                                                    on:click={(e) => toggleVisibility(name, item.public, e)}
+                                                    disabled={toggleVisibilityFiles.has(name)}
+                                                >
+                                                    {#if toggleVisibilityFiles.has(name)}
+                                                        <RefreshCw size={18} class="animate-spin" />
+                                                    {:else}
+                                                        {#if item.public}
+                                                            <Eye size={18} />
+                                                        {:else}
+                                                            <EyeOff size={18} />
+                                                        {/if}
+                                                    {/if}
+                                                </button>
+                                                {#if item.public}
+                                                    <button
+                                                        class="p-1.5 rounded-lg hover:bg-[#45475A] text-[#CDD6F4]"
+                                                        on:click={(e) => {
+                                                            e.stopPropagation();
+                                                            const url = `${window.location.origin}/view/${data.user.username}/${name}`;
+                                                            navigator.clipboard.writeText(url);
+                                                            showAlert("success", "Share link copied to clipboard!");
+                                                        }}
+                                                    >
+                                                        <Share2 size={18} />
+                                                    </button>
+                                                {/if}
                                             </div>
                                         {/if}
                                     </div>

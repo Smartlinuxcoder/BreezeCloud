@@ -50,7 +50,8 @@ export async function POST({ request, locals }) {
             type: 'file',
             size: file.size,
             mimeType: file.type,
-            modified: new Date().toISOString()
+            modified: new Date().toISOString(),
+            public: false,
         };
 
         await db.update(users).set({
