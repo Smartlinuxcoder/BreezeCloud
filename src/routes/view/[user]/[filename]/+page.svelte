@@ -68,30 +68,6 @@
 
 <svelte:head>
     <title>{filename} - Shared by {user}</title>
-    <meta name="description" content={`View {filename} shared by {user} on BreezeCloud`} />
-    
-    <meta property="og:title" content={`${filename} - Shared by ${user}`} />
-    <meta property="og:description" content={`View ${filename} shared by ${user} on BreezeCloud`} />
-    <meta property="og:url" content={window?.location?.href} />
-    
-    {#if mediaType === "image"}
-        <meta property="og:image" content={absoluteUrl} />
-        <meta property="og:type" content="image" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content={absoluteUrl} />
-    {:else if mediaType === "video"}
-        <meta property="og:video" content={absoluteUrl} />
-        <meta property="og:video:type" content="video/mp4" />
-        <meta property="og:type" content="video.other" />
-        <meta name="twitter:card" content="player" />
-        <meta name="twitter:player" content={absoluteUrl} />
-    {:else}
-        <meta property="og:type" content="website" />
-        <meta name="twitter:card" content="summary" />
-    {/if}
-    
-    <meta name="twitter:title" content={`${filename} - Shared by {user}`} />
-    <meta name="twitter:description" content={`View ${filename} shared by ${user} on BreezeCloud`} />
 </svelte:head>
 
 <div class="min-h-screen bg-[#1E1E2E] p-6 rounded-lg">
