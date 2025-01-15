@@ -22,6 +22,10 @@ Dead simple, fast, expandable cloud storage. Like, real fast dawg.
 - **Storage**: MinIO (Selfosted & cheap)
 - **Database**: Postgres and drizzle for the ORM
 
+## API Docs
+
+API documentation available at [/docs/api.md](/docs/api.md)
+
 
 > ### ⚠️ Known Issues
 > 
