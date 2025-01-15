@@ -9,7 +9,6 @@
         const username = event.target.elements.username.value;
         const password = event.target.elements.password.value;
         
-        console.log(username, password);
         try {
             const response = await fetch("/api/v1/login", {
                 method: "POST",
@@ -20,7 +19,6 @@
             });
 
             const result = await response.json();
-            console.log(result);
             if (!result.error) {
                 alertType = "success";
                 alertMessage = "Login successful!";

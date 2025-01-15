@@ -22,7 +22,6 @@ export async function handle({ event, resolve }) {
                     storageUsed: userData.storageUsed,
                     fileTree: userData.fileTree
                 };
-                console.log('User:', event.locals.user);
             } else {
                 event.locals.user = null;
                 event.cookies.delete('auth', { path: '/' });

@@ -23,7 +23,6 @@ export async function POST({ request, cookies }) {
         if (!validPassword) {
             return json({ error: 'Invalid credentials' }, { status: 401 });
         }
-        console.log('JWT_SECRET:', JWT_SECRET);
         const secret = new TextEncoder().encode(JWT_SECRET);
         const token = await new jose.SignJWT({
             id: user.id,
